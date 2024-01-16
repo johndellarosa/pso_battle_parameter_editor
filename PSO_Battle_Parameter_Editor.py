@@ -669,5 +669,38 @@ class Table:
 
         return merged_table
 
+    def set_with_data_type(self,value, data_type, location ,little_endian=True):
+        pointer = location
+        format_string = ''
+        if little_endian:
+            format_string = format_string + '<'
+        else:
+            format_string = format_string + '>'
+        if data_type == 'float':
+            format_string = format_string + 'f'
+        elif data_type == 'double':
+            format_string = format_string + 'd'
+        elif data_type == 'int32':
+            format_string = format_string + 'i'
+        elif data_type == 'uint32':
+            format_string = format_string +'I'
+        elif data_type == 'int16':
+            format_string = format_string + 'h'
+        elif data_type == 'uint16':
+            format_string = format_string + 'H'
+        else:
+            raise Exception('Error with data_type parameter')
+
+
+        width = struct.calcsize(format_string)
+        new_value = struct.pack(format_string, value)
+        self.data[pointer:pointer + width] = new_value
+
+    def set_with_bytes(self, value : bytes, location):
+        pointer = location
+        width = len(value)
+        self.data[pointer:pointer + width] = value
+
+
     def __repr__(self):
         return f'Episode {self.episode} table object'
