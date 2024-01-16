@@ -384,7 +384,7 @@ class Table:
             self.stat_str_to_num_map = ep4_stat_str_to_num
             self.resist_str_to_num_map = ep4_resist_str_to_num
         else:
-            raise "Invalid Episode Number"
+            raise KeyError("Invalid Episode Number")
 
         if os.path.isfile(file_path):
             try:
@@ -393,11 +393,13 @@ class Table:
 
             except:
                 print(f"Error reading file")
+        else:
+            raise OSError("File not found. Please check file path.")
 
     def write(self, new_file_name, overwrite=False):
         if ~overwrite:
             if os.path.isfile(new_file_name):
-                raise "Output filename already exists. Either change new_file_name or set overwrite=True"
+                raise OSError("Output filename already exists. Either change new_file_name or set overwrite=True")
                 return;
 
         with open(new_file_name, "wb") as binary_file:
@@ -418,7 +420,7 @@ class Table:
         if enemy in self.resist_str_to_num_map.keys():
             enemy_position = self.resist_str_to_num_map[enemy]
         else:
-            raise "Check enemy spelling. List of keys in get_keys(episode num)."
+            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
 
 
         table_length = 0x60
@@ -450,7 +452,7 @@ class Table:
         if enemy in self.stat_str_to_num_map.keys():
             enemy_position = self.stat_str_to_num_map[enemy]
         else:
-            raise "Check enemy spelling. List of keys in get_keys(episode num)."
+            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
 
         # stats
         table_length = 0x60
@@ -488,7 +490,7 @@ class Table:
         if enemy in self.stat_str_to_num_map.keys():
             enemy_position = self.stat_str_to_num_map[enemy]
         else:
-            raise "Check enemy spelling. List of keys in get_keys(episode num)."
+            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
 
         # stats
         table_length = 0x60
@@ -521,21 +523,21 @@ class Table:
             pointer += 14
             output_string = output_string + "H"
         else:
-            raise "please use lower case attribute name"
+            raise KeyError("please use lower case attribute name")
 
         print(f'Pointer is at {hex(pointer)} ({pointer})')
         old_value = struct.unpack(output_string, self.data[pointer:pointer + 2])[0]
-        print(f"Previous value was {hex(old_value)} ({old_value})")
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + 2])})")
         new_value = struct.pack(output_string, value)
         self.data[pointer:pointer + 2] = new_value
-        print(f"Value is now {hex(new_value)} ({new_value})")
+        print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
 
     def set_resist_property(self, value, stat, enemy, difficulty):
 
         if enemy in self.resist_str_to_num_map.keys():
             enemy_position = self.resist_str_to_num_map[enemy]
         else:
-            raise "Check enemy spelling. List of keys in get_keys(episode num)."
+            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
 
         # stats
         table_length = 0x60
@@ -546,6 +548,7 @@ class Table:
         if stat == 'evp_bonus':
             pointer += 0
             output_string = output_string + "h"
+
         elif stat == 'efr':
             pointer += 2
             output_string = output_string + "H"
@@ -564,14 +567,14 @@ class Table:
         # elif stat == 'lck':
         #     pointer += 12
         else:
-            raise "please use lower case attribute name"
+            raise KeyError("please use lower case attribute name")
         print(f'Pointer is at {hex(pointer)} ({pointer})')
 
         old_value = struct.unpack(output_string, self.data[pointer:pointer + 2])[0]
-        print(f"Previous value was {hex(old_value)} ({old_value})")
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + 2])})")
         new_value = struct.pack(output_string, value)
         self.data[pointer:pointer + 2] = new_value
-        print(f"Value is now {hex(new_value)} ({new_value})")
+        print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
 
     def get_stat_table(self,difficulty:int,verbose:bool=False):
         table_length = 0x60
@@ -608,7 +611,7 @@ class Table:
         # while pointer < 0x3600:
         for i in range(table_length):
             subset = self.data[pointer:pointer + stat_size]
-
+            # print(subset)
             stat_table.loc[i] = struct.unpack(player_stats_format,subset)
 
             pointer += stat_size
@@ -648,6 +651,7 @@ class Table:
 
         for i in range(table_length):
             subset = self.data[pointer:pointer + resist_size]
+            # print(subset)
             resist_table.loc[i] = struct.unpack(resist_format_str, subset)
 
             pointer += resist_size
