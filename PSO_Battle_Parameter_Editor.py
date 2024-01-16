@@ -525,11 +525,12 @@ class Table:
         else:
             raise KeyError("please use lower case attribute name")
 
+        width = struct.calcsize(output_string)
         print(f'Pointer is at {hex(pointer)} ({pointer})')
-        old_value = struct.unpack(output_string, self.data[pointer:pointer + 2])[0]
-        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + 2])})")
+        old_value = struct.unpack(output_string, self.data[pointer:pointer + width])[0]
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width])})")
         new_value = struct.pack(output_string, value)
-        self.data[pointer:pointer + 2] = new_value
+        self.data[pointer:pointer + width] = new_value
         print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
 
     def set_resist_property(self, value, stat, enemy, difficulty):
@@ -569,11 +570,11 @@ class Table:
         else:
             raise KeyError("please use lower case attribute name")
         print(f'Pointer is at {hex(pointer)} ({pointer})')
-
-        old_value = struct.unpack(output_string, self.data[pointer:pointer + 2])[0]
-        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + 2])})")
+        width = struct.calcsize(output_string)
+        old_value = struct.unpack(output_string, self.data[pointer:pointer + width])[0]
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width])})")
         new_value = struct.pack(output_string, value)
-        self.data[pointer:pointer + 2] = new_value
+        self.data[pointer:pointer + width] = new_value
         print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
 
     def get_stat_table(self,difficulty:int,verbose:bool=False):
@@ -660,11 +661,8 @@ class Table:
 
     def get_merged_table(self, difficulty:int,verbose:bool=False):
 
-
-
         stat_table = self.get_stat_table(difficulty=difficulty, verbose=verbose)
         resist_table = self.get_resist_table(difficulty=difficulty, verbose=verbose)
-
 
         merged_table = pd.merge(stat_table, resist_table, left_index=True, right_index=True)
         merged_table.index.rename('Enemy', inplace=True)
