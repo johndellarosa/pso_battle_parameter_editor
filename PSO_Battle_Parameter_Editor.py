@@ -329,18 +329,14 @@ files = {'Online':{}, 'Offline':{}}
 
 def load_files():
     print("Attempting to read battleparam files in same directory")
-    files['Online'][1] = load_file('BattleParamEntry_on.dat', True, 1)
-    files['Online'][2] =load_file('BattleParamEntry_lab_on.dat', True, 2)
-    files['Online'][4] =load_file('BattleParamEntry_ep4_on.dat', True, 4)
-    files['Offline'][1] =load_file('BattleParamEntry.dat', False, 1)
-    files['Offline'][2] =load_file('BattleParamEntry_lab.dat', False, 2)
-    files['Offline'][4] =load_file('BattleParamEntry_ep4.dat', False, 4)
+    files['Online'][1] = load_file('BattleParamEntry_on.dat', 1)
+    files['Online'][2] =load_file('BattleParamEntry_lab_on.dat', 2)
+    files['Online'][4] =load_file('BattleParamEntry_ep4_on.dat', 4)
+    files['Offline'][1] =load_file('BattleParamEntry.dat', 1)
+    files['Offline'][2] =load_file('BattleParamEntry_lab.dat', 2)
+    files['Offline'][4] =load_file('BattleParamEntry_ep4.dat', 4)
 
-def load_file(file_path:str, online:bool, episode:int):
-    if online:
-        first_num = 'Online'
-    else:
-        first_num = 'Offline'
+def load_file(file_path:str, episode:int):
     if os.path.isfile(file_path):
         try:
             # with open(file_path, 'rb') as f:
@@ -348,10 +344,10 @@ def load_file(file_path:str, online:bool, episode:int):
             #     return file
             return Table(file_path=file_path,episode=episode)
         except:
-            print(f"Error reading ep {episode} {first_num} file")
+            print(f"Error reading file")
 
     else:
-        print(f"Unable to locate {episode} {first_num} file. Please check file path argument.")
+        print(f"Unable to locate file. Please check file path argument.")
     return None
 
 
@@ -400,20 +396,28 @@ class Table:
         if ~overwrite:
             if os.path.isfile(new_file_name):
                 raise OSError("Output filename already exists. Either change new_file_name or set overwrite=True")
-                return;
 
         with open(new_file_name, "wb") as binary_file:
             # Write bytes to file
             binary_file.write(self.data)
         print('File has been written!')
 
-    def get_keys(self, episode):
+    def get_keys(self):
 
         print("Stat map keys:")
-        print(self.stat_str_to_num_map.keys())
+        print(self.get_stat_keys())
         print('-----')
         print("Resist map keys:")
-        print(self.resist_str_to_num_map.keys())
+        print(self.get_resist_keys())
+
+    def get_stat_keys(self):
+
+        return self.stat_str_to_num_map.keys()
+
+    def get_resist_keys(self):
+        return self.resist_str_to_num_map.keys()
+
+
 
     def get_address_resist(self,enemy, difficulty):
 
@@ -498,6 +502,7 @@ class Table:
 
         pointer = 0x0 + difficulty * (table_length * stat_size) + enemy_position * stat_size
         output_string = '<'
+        stat = stat.lower()
         if stat == 'atp':
             pointer += 0
             output_string = output_string + "H"
@@ -546,6 +551,7 @@ class Table:
         output_string = '<'
         pointer = 0x7E00 + difficulty * (table_length * resist_size) + enemy_position * resist_size
 
+        stat = stat.lower()
         if stat == 'evp_bonus':
             pointer += 0
             output_string = output_string + "h"
@@ -565,8 +571,7 @@ class Table:
         elif stat == 'edk':
             pointer += 10
             output_string = output_string + "H"
-        # elif stat == 'lck':
-        #     pointer += 12
+
         else:
             raise KeyError("please use lower case attribute name")
         print(f'Pointer is at {hex(pointer)} ({pointer})')
@@ -705,7 +710,7 @@ class Table:
 
         return merged_table
 
-    def set_with_data_type(self,value, data_type, location ,little_endian=True):
+    def set_with_data_type(self,value, data_type, location ,little_endian=True, verbose=True):
         pointer = location
         format_string = ''
         if little_endian:
@@ -730,13 +735,46 @@ class Table:
 
         width = struct.calcsize(format_string)
         new_value = struct.pack(format_string, value)
+        if verbose:
+            print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
+            print(f'Was {self.data[pointer:pointer+width]}')
         self.data[pointer:pointer + width] = new_value
+        if verbose:
+            print(f"Now {self.data[pointer:pointer+width]}")
 
-    def set_with_bytes(self, value : bytes, location):
+    def set_with_bytes(self, value : bytes, location, verbose=True):
         pointer = location
         width = len(value)
+        if verbose:
+            print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
+            print(f'Was {self.data[pointer:pointer+width]}')
         self.data[pointer:pointer + width] = value
+        if verbose:
+            print(f"Now {self.data[pointer:pointer+width]}")
 
+    def get_bytes(self,start,end):
+        return self.data[start:end+1]
+
+    def search_bytes(self, sequence):
+        results = []
+        data_copy = self.data.copy()
+        while True:
+            # print('doing loop')
+            test_index = data_copy.find(sequence)
+            if test_index >= 0:
+
+                # print(test_index)
+                if results:
+                    # print(results)
+                    results.append(test_index+results[-1]+1)
+                else:
+                    results.append(test_index)
+                if test_index+2 < len(self.data):
+                    data_copy = data_copy[test_index+1:]
+                else:
+                    return [hex(i) for i in results]
+            else:
+                return [hex(i) for i in results]
 
     def __repr__(self):
         return f'Episode {self.episode} table object'
