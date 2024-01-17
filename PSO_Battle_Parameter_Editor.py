@@ -659,6 +659,42 @@ class Table:
             i += 1
         return resist_table
 
+    def get_attack_table_raw(self,difficulty:int):
+        table_length = 0x60
+
+        attack_table = pd.DataFrame(columns=[i for i in range(16)])
+
+        attack_size = struct.calcsize(attack_format_str)
+        pointer = 0x3600 + difficulty * (table_length * attack_size)
+        i = 0x0
+
+        for i in range(table_length):
+            subset = self.data[pointer:pointer + attack_size]
+            # print(subset)
+            attack_table.loc[i] = struct.unpack(attack_format_str, subset)
+
+            pointer += attack_size
+            i += 1
+        return attack_table
+
+    def get_movement_table_raw(self,difficulty:int):
+        table_length = 0x60
+
+        movement_table = pd.DataFrame(columns=[i for i in range(12)])
+
+        movement_size = struct.calcsize(movement_format_str)
+        pointer = 0xAE00 + difficulty * (table_length * movement_size)
+        i = 0x0
+
+        for i in range(table_length):
+            subset = self.data[pointer:pointer + movement_size]
+            # print(subset)
+            movement_table.loc[i] = struct.unpack(movement_format_str, subset)
+
+            pointer += movement_size
+            i += 1
+        return movement_table
+
     def get_merged_table(self, difficulty:int,verbose:bool=False):
 
         stat_table = self.get_stat_table(difficulty=difficulty, verbose=verbose)
