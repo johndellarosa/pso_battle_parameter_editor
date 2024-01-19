@@ -476,11 +476,14 @@ class Table:
 
     def get_address_resist(self,enemy, difficulty):
 
-        if enemy in self.resist_str_to_num_map.keys():
-            enemy_position = self.resist_str_to_num_map[enemy]
+        enemy_position = 0
+        if type(enemy) == str:
+            if enemy in self.resist_str_to_num_map.keys():
+                enemy_position = self.resist_str_to_num_map[enemy]
+            else:
+                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         else:
-            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
-
+            enemy_position = enemy
 
 
         resist_size = struct.calcsize(resist_format_str)
@@ -508,10 +511,14 @@ class Table:
     def get_address_stats(self, enemy,difficulty):
 
 
-        if enemy in self.stat_str_to_num_map.keys():
-            enemy_position = self.stat_str_to_num_map[enemy]
+        enemy_position = 0
+        if type(enemy) == str:
+            if enemy in self.stat_str_to_num_map.keys():
+                enemy_position = self.stat_str_to_num_map[enemy]
+            else:
+                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         else:
-            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
+            enemy_position = enemy
 
         # stats
         table_length = 0x60
@@ -546,11 +553,14 @@ class Table:
 
     def get_address_attack(self,enemy, difficulty):
 
-        if enemy in self.stat_str_to_num_map.keys():
-            enemy_position = self.stat_str_to_num_map[enemy]
+        enemy_position = 0
+        if type(enemy) == str:
+            if enemy in self.stat_str_to_num_map.keys():
+                enemy_position = self.stat_str_to_num_map[enemy]
+            else:
+                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         else:
-            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
-
+            enemy_position = enemy
 
 
         attack_size = struct.calcsize(attack_format_str)
@@ -684,11 +694,14 @@ class Table:
 
     def set_stat_property(self, value, stat, enemy, difficulty):
 
-        if enemy in self.stat_str_to_num_map.keys():
-            enemy_position = self.stat_str_to_num_map[enemy]
+        enemy_position = 0
+        if type(enemy) == str:
+            if enemy in self.stat_str_to_num_map.keys():
+                enemy_position = self.stat_str_to_num_map[enemy]
+            else:
+                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         else:
-            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
-
+            enemy_position = enemy
         # stats
         table_length = 0x60
         stat_size = struct.calcsize(player_stats_format)
