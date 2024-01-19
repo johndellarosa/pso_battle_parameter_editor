@@ -327,14 +327,14 @@ resist_format_str = '<hHHHHHIIIIi'
 files = {'Online':{}, 'Offline':{}}
 
 
-def load_files():
+def load_files(directory='.'):
     print("Attempting to read battleparam files in same directory")
-    files['Online'][1] = load_file('BattleParamEntry_on.dat', 1)
-    files['Online'][2] =load_file('BattleParamEntry_lab_on.dat', 2)
-    files['Online'][4] =load_file('BattleParamEntry_ep4_on.dat', 4)
-    files['Offline'][1] =load_file('BattleParamEntry.dat', 1)
-    files['Offline'][2] =load_file('BattleParamEntry_lab.dat', 2)
-    files['Offline'][4] =load_file('BattleParamEntry_ep4.dat', 4)
+    files['Online'][1] = load_file(directory+'/BattleParamEntry_on.dat', 1)
+    files['Online'][2] =load_file(directory+'/BattleParamEntry_lab_on.dat', 2)
+    files['Online'][4] =load_file(directory+'/BattleParamEntry_ep4_on.dat', 4)
+    files['Offline'][1] =load_file(directory+'/BattleParamEntry.dat', 1)
+    files['Offline'][2] =load_file(directory+'/BattleParamEntry_lab.dat', 2)
+    files['Offline'][4] =load_file(directory+'/BattleParamEntry_ep4.dat', 4)
 
 def load_file(file_path:str, episode:int):
     if os.path.isfile(file_path):
@@ -361,7 +361,7 @@ class Table:
     resist_num_to_str_map = []
     resist_str_to_num_map = []
 
-    def __init__(self,file_path, episode):
+    def __init__(self,file_path, episode,table_length = 0x60):
         self.episode = episode
         if episode == 1:
             self.stat_num_to_str_map = ep1_stat_num_to_str
@@ -391,6 +391,12 @@ class Table:
                 print(f"Error reading file")
         else:
             raise OSError("File not found. Please check file path.")
+
+        self.movement_format_str = movement_format_str
+        self.attack_format_str = attack_format_str
+        self.player_stats_format = player_stats_format
+        self.resist_format_str = resist_format_str
+        self.table_length = table_length
 
     def write(self, new_file_name, overwrite=False):
         if ~overwrite:
@@ -427,10 +433,10 @@ class Table:
             raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
 
 
-        table_length = 0x60
+
         resist_size = struct.calcsize(resist_format_str)
 
-        pointer = 0x7E00 + difficulty * (table_length * resist_size) + enemy_position * resist_size
+        pointer = 0x7E00 + difficulty * (self.table_length * resist_size) + enemy_position * resist_size
         print(
             f'{enemy} resist at difficulty {difficulty} is at {hex(pointer)} ({pointer}) to {hex(pointer + resist_size)} ({pointer + resist_size})')
         pointer += 2
@@ -624,6 +630,18 @@ class Table:
             i += 1
         return stat_table
 
+    def get_table_raw(self, table, difficulty):
+        if table == 'stat':
+            return self.get_stat_table_raw(difficulty)
+        elif table == 'resist':
+            return self.get_resist_table_raw(difficulty)
+        elif table == 'attack':
+            return self.get_attack_table_raw(difficulty)
+        elif table == 'movement':
+            return self.get_movement_table_raw(difficulty)
+        else:
+            raise Exception("Invalid table name")
+
     def get_resist_table(self,difficulty:int,verbose:bool=False):
         table_length = 0x60
 
@@ -776,5 +794,40 @@ class Table:
             else:
                 return [hex(i) for i in results]
 
+
+    def get_all_instances_in_table(self, row, table, row_prefix = '', column_prefix = ''):
+        base_pointer = 0
+        if table == 'stat':
+            base_pointer = 0
+        elif table == 'resist':
+            base_pointer = 0x7E00
+        elif table == 'attack':
+            base_pointer = 0x3600
+        elif table == 'movement':
+            base_pointer = 0xAE00
+        temp_df = self.get_table_raw(table,0).iloc[row]
+        # print(temp_df)
+        output_df = pd.DataFrame(columns=temp_df.index)
+        # print(output_df)
+        # print(temp_df.values)
+        output_df.loc[0] = temp_df.values
+
+        for difficulty in [1,2,3]:
+            temp_df = self.get_table_raw(table,difficulty).iloc[row]
+            output_df.loc[difficulty] = temp_df.values
+        if row_prefix:
+            output_df.index = output_df.index.map(lambda x: f'{row_prefix} {x}')
+        if column_prefix:
+            output_df.columns = output_df.columns.map(lambda x: f'{column_prefix} {table}{x}')
+
+        return output_df
+
     def __repr__(self):
         return f'Episode {self.episode} table object'
+
+class Subtable:
+
+    def __int__(self, format_string,base_pointer):
+
+        self.format_string = format_string
+        self.base_pointer = base_pointer
