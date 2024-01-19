@@ -10,6 +10,11 @@ import pandas as pd
 
 
 class EnemyStatEp1:
+    """
+    Map of enemy name and what 0-indexed row number the entry for a difficulty's stat table
+    """
+
+
     MOTHMANT = 0x00
     MONEST = 0x01
     SAVAGE_WOLF = 0x02
@@ -328,6 +333,15 @@ files = {'Online':{}, 'Offline':{}}
 
 
 def load_files(directory='.'):
+    """
+    Attempts to load files for each episode + mode combination. These are stored in the "files" global variable
+
+    Parameters
+    ----------
+    directory : str
+        Directory file path. Absolute or relative.
+    """
+
     print("Attempting to read battleparam files in same directory")
     files['Online'][1] = load_file(directory+'/BattleParamEntry_on.dat', 1)
     files['Online'][2] =load_file(directory+'/BattleParamEntry_lab_on.dat', 2)
@@ -337,6 +351,22 @@ def load_files(directory='.'):
     files['Offline'][4] =load_file(directory+'/BattleParamEntry_ep4.dat', 4)
 
 def load_file(file_path:str, episode:int):
+    """
+    Creates a Table object to manipulate the data from a file
+
+    Parameters
+    ----------
+    file_path : str
+        file path to battle param file. Absolute or relative.
+    episode: int (1,2,4)
+        What episode the battle param file corresponds to.
+
+    Returns
+    -------
+    Table
+        File data loaded into python object
+    """
+
     if os.path.isfile(file_path):
         try:
             # with open(file_path, 'rb') as f:
@@ -362,6 +392,21 @@ class Table:
     resist_str_to_num_map = []
 
     def __init__(self,file_path, episode,table_length = 0x60):
+        """
+        Table constructor
+
+        Parameters
+        ----------
+        file_path : str
+            File path to battle param file
+        episode : int (1,2,4)
+            which episode the battle param file corresponds to
+
+        Returns
+        -------
+        Table
+            File data represented in python object
+        """
         self.episode = episode
         if episode == 1:
             self.stat_num_to_str_map = ep1_stat_num_to_str
@@ -397,6 +442,10 @@ class Table:
         self.player_stats_format = player_stats_format
         self.resist_format_str = resist_format_str
         self.table_length = table_length
+        self.base_pointer_stat = 0x0
+        self.base_pointer_attack = 0x3600
+        self.base_pointer_resist = 0x7E00
+        self.base_pointer_movement = 0xAE00
 
     def write(self, new_file_name, overwrite=False):
         if ~overwrite:
@@ -494,6 +543,144 @@ class Table:
         pointer+=2
         value = struct.unpack('<H', self.data[pointer:pointer+2])[0]
         print(f'ESP le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+
+    def get_address_attack(self,enemy, difficulty):
+
+        if enemy in self.stat_str_to_num_map.keys():
+            enemy_position = self.stat_str_to_num_map[enemy]
+        else:
+            raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
+
+
+
+        attack_size = struct.calcsize(attack_format_str)
+
+        pointer = self.base_pointer_attack + difficulty * (self.table_length * attack_size) + enemy_position * attack_size
+        print(
+            f'{enemy} attack at difficulty {difficulty} is at {hex(pointer)} ({pointer}) to {hex(pointer + attack_size)} ({pointer + attack_size})')
+        value = struct.unpack('<h', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a1 le_int16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        value = struct.unpack('<h', self.data[pointer:pointer + 2])[0]
+        print(f'attack_atp le_int16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        value = struct.unpack('<h', self.data[pointer:pointer + 2])[0]
+        print(f'ata_bonus le_int16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a4 le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        # 08
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'distance_x le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 0C
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'angle_x le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #10
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'distance_y le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #14
+        value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a8 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        #16
+        value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a9 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        #18
+        value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a10 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+
+        pointer += 2
+        #1A
+        value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
+        print(f'unknown_a11 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        #1C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a12 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer +=4
+        #20
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a13 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer +=4
+        #24
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a14 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer +=4
+        #28
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a15 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer +=4
+        #2C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a16 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer +=4
+
+    def get_address_movement(self,enemy, difficulty):
+        enemy_position = 0
+        if type(enemy) == str:
+            if enemy in self.stat_str_to_num_map.keys():
+                enemy_position = self.stat_str_to_num_map[enemy]
+            else:
+                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
+        else:
+            enemy_position = enemy
+
+
+        movement_size = struct.calcsize(movement_format_str)
+
+        pointer = self.base_pointer_movement + difficulty * (self.table_length * movement_size) + enemy_position * movement_size
+        print(
+            f'{enemy} movement at difficulty {difficulty} is at {hex(pointer)} ({pointer}) to {hex(pointer + movement_size)} ({pointer + movement_size})')
+
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'idle_move_speed le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'idle_animation_speed le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'move_speed le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'animation_speed le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 10
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a1 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 14
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a2 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #18
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a3 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #14
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a4 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #16
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a5 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #18
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a6 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #1A
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a7 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #1C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a8 le_unit32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
 
     def set_stat_property(self, value, stat, enemy, difficulty):
 
