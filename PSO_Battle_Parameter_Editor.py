@@ -381,6 +381,27 @@ def load_file(file_path:str, episode:int):
     return None
 
 
+def _validate_difficulty(difficulty):
+    if type(difficulty) == str:
+        if difficulty.lower() in ['normal','n','norm']:
+            difficulty = 0
+        elif difficulty.lower() in ['hard','h']:
+            difficulty = 1
+        elif difficulty.lower() == ['ultimate','ult','u']:
+            difficulty = 3
+        elif difficulty.lower() in ['vh','vhard', 'veryhard', 'very hard','v h','v hard']:
+            difficulty = 2
+        else:
+            raise Exception("Unable to parse difficulty")
+    elif type(difficulty) != int:
+        try:
+            difficulty = int(difficulty)
+        except:
+            raise Exception("Unable to coerce difficulty argument to valid input")
+    if difficulty not in [0, 1, 2, 3]:
+        raise Exception("Invalid difficulty input. Please choose difficulty in [0,1,2,3]")
+    return difficulty
+
 
 class Table:
 
@@ -475,6 +496,7 @@ class Table:
 
 
     def get_address_resist(self,enemy, difficulty):
+        difficulty = _validate_difficulty(difficulty)
 
         enemy_position = 0
         if type(enemy) == str:
@@ -485,30 +507,65 @@ class Table:
         else:
             enemy_position = enemy
 
+        self._check_enemy_entry_number_in_range(enemy_position)
 
         resist_size = struct.calcsize(resist_format_str)
 
-        pointer = 0x7E00 + difficulty * (self.table_length * resist_size) + enemy_position * resist_size
+        pointer = self.base_pointer_resist + difficulty * (self.table_length * resist_size) + enemy_position * resist_size
         print(
             f'{enemy} resist at difficulty {difficulty} is at {hex(pointer)} ({pointer}) to {hex(pointer + resist_size)} ({pointer + resist_size})')
+        # 00
+        value = struct.unpack('<h', self.data[pointer:pointer + 2])[0]
+        print(f'evp_bonus le_int16 is set to {value} starting at at {hex(pointer)} ({pointer})')
         pointer += 2
+        # 02
         value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
         print(f'EFR le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
         pointer += 2
+        # 04
         value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
         print(f'EIC le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
         pointer += 2
+        # 06
         value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
         print(f'ETH le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
         pointer += 2
+        # 08
         value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
         print(f'ELT le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
         pointer += 2
+        #0A
         value = struct.unpack('<H', self.data[pointer:pointer + 2])[0]
         print(f'EDK le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 2
+        #0C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a6 le_uint32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #10
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a7 le_uint32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #14
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a8 le_uint32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #18
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a9 le_uint32 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #1C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'dfp_bonus le_int32 is set to {value} starting at at {hex(pointer)} ({pointer})')
 
+
+
+    def _check_enemy_entry_number_in_range(self, enemy_position):
+        if enemy_position >= self.table_length:
+            raise Exception("Enemy entry out beyond bounds")
 
     def get_address_stats(self, enemy,difficulty):
+        difficulty = _validate_difficulty(difficulty)
 
 
         enemy_position = 0
@@ -520,11 +577,12 @@ class Table:
         else:
             enemy_position = enemy
 
+        self._check_enemy_entry_number_in_range(enemy_position)
         # stats
-        table_length = 0x60
+
         stat_size = struct.calcsize(player_stats_format)
 
-        pointer = 0x0 + difficulty * (table_length * stat_size) + enemy_position * stat_size
+        pointer = self.base_pointer_stat + difficulty * (self.table_length * stat_size) + enemy_position * stat_size
 
         print(f'{enemy} stats at difficulty {difficulty} is at {hex(pointer)} ({pointer}) to {hex(pointer+stat_size)} ({pointer+stat_size})')
         value = struct.unpack('<H', self.data[pointer:pointer+2])[0]
@@ -550,8 +608,29 @@ class Table:
         pointer+=2
         value = struct.unpack('<H', self.data[pointer:pointer+2])[0]
         print(f'ESP le_uint16 is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer+=2
+        #10
+        value = struct.unpack('<f', self.data[pointer:pointer+4])[0]
+        print(f'unknown_a2 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 14
+        value = struct.unpack('<f', self.data[pointer:pointer + 4])[0]
+        print(f'unknown_a3 le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 18
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'level le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        # 1C
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'experience le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
+        pointer += 4
+        #20
+        value = struct.unpack('<I', self.data[pointer:pointer + 4])[0]
+        print(f'meseta le_float is set to {value} starting at at {hex(pointer)} ({pointer})')
 
     def get_address_attack(self,enemy, difficulty):
+        difficulty = _validate_difficulty(difficulty)
 
         enemy_position = 0
         if type(enemy) == str:
@@ -562,6 +641,7 @@ class Table:
         else:
             enemy_position = enemy
 
+        self._check_enemy_entry_number_in_range(enemy_position)
 
         attack_size = struct.calcsize(attack_format_str)
 
@@ -631,6 +711,8 @@ class Table:
         pointer +=4
 
     def get_address_movement(self,enemy, difficulty):
+        difficulty = _validate_difficulty(difficulty)
+
         enemy_position = 0
         if type(enemy) == str:
             if enemy in self.stat_str_to_num_map.keys():
@@ -639,7 +721,7 @@ class Table:
                 raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         else:
             enemy_position = enemy
-
+        self._check_enemy_entry_number_in_range(enemy_position)
 
         movement_size = struct.calcsize(movement_format_str)
 
@@ -693,15 +775,17 @@ class Table:
         pointer += 4
 
     def set_stat_property(self, value, stat, enemy, difficulty):
+        difficulty = _validate_difficulty(difficulty)
 
         enemy_position = 0
         if type(enemy) == str:
             if enemy in self.stat_str_to_num_map.keys():
                 enemy_position = self.stat_str_to_num_map[enemy]
             else:
-                raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
+                raise KeyError("Check enemy spelling. List of keys in get_keys().")
         else:
             enemy_position = enemy
+        self._check_enemy_entry_number_in_range(enemy_position)
         # stats
         table_length = 0x60
         stat_size = struct.calcsize(player_stats_format)
@@ -709,48 +793,69 @@ class Table:
         pointer = 0x0 + difficulty * (table_length * stat_size) + enemy_position * stat_size
         output_string = '<'
         stat = stat.lower()
-        if stat == 'atp':
+        if stat == 'atp'  or stat == 0:
             pointer += 0
             output_string = output_string + "H"
-        elif stat == 'mst':
+        elif stat == 'mst' or stat == 1:
             pointer += 2
             output_string = output_string + "H"
-        elif stat == 'evp':
+        elif stat == 'evp' or stat == 2:
             pointer += 4
             output_string = output_string + "H"
-        elif stat == 'hp':
+        elif stat == 'hp' or stat == 3:
             pointer += 6
             output_string = output_string + "H"
-        elif stat == 'dfp':
+        elif stat == 'dfp' or stat == 4:
             pointer += 8
             output_string = output_string + "H"
-        elif stat == 'ata':
+        elif stat == 'ata' or stat == 5:
             pointer += 10
             output_string = output_string + "H"
-        elif stat == 'lck':
+        elif stat == 'lck' or stat ==  6:
             pointer += 12
             output_string = output_string + "H"
-        elif stat == 'esp':
+        elif stat == 'esp' or stat == 7:
             pointer += 14
             output_string = output_string + "H"
+        elif stat == 'unknown_a1' or stat == 8:
+            pointer += 0xE
+            output_string = output_string + "H"
+        elif stat == 'unknown_a2' or stat == 9:
+            pointer += 0x10
+            output_string = output_string + "f"
+        elif stat == 'unknown_a3' or stat == 10:
+            pointer += 0x14
+            output_string = output_string + "f"
+        elif stat == 'level' or stat == 11:
+            pointer += 0x18
+            output_string = output_string + "I"
+        elif stat == 'experience' or stat == 12:
+            pointer += 0x1C
+            output_string = output_string + "I"
+        elif stat == 'meseta' or stat == 13:
+            pointer += 0x20
+            output_string = output_string + "I"
         else:
             raise KeyError("please use lower case attribute name")
 
         width = struct.calcsize(output_string)
         print(f'Pointer is at {hex(pointer)} ({pointer})')
         old_value = struct.unpack(output_string, self.data[pointer:pointer + width])[0]
-        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width])})")
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width]).hex()})")
         new_value = struct.pack(output_string, value)
         self.data[pointer:pointer + width] = new_value
-        print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
+        print(f"Value is now {value} ({new_value.hex()}) at {hex(pointer)}")
 
     def set_resist_property(self, value, stat, enemy, difficulty):
+
+        difficulty = _validate_difficulty(difficulty)
+
 
         if enemy in self.resist_str_to_num_map.keys():
             enemy_position = self.resist_str_to_num_map[enemy]
         else:
             raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
-
+        self._check_enemy_entry_number_in_range(enemy_position)
         # stats
         table_length = 0x60
         resist_size = struct.calcsize(resist_format_str)
@@ -758,46 +863,64 @@ class Table:
         pointer = 0x7E00 + difficulty * (table_length * resist_size) + enemy_position * resist_size
 
         stat = stat.lower()
-        if stat == 'evp_bonus':
+        if stat == 'evp_bonus' or stat == 0:
             pointer += 0
             output_string = output_string + "h"
 
-        elif stat == 'efr':
+        elif stat == 'efr' or stat == 1:
             pointer += 2
             output_string = output_string + "H"
-        elif stat == 'eic':
+        elif stat == 'eic' or stat == 2:
             pointer += 4
             output_string = output_string + "H"
-        elif stat == 'eth':
+        elif stat == 'eth' or stat == 3:
             pointer += 6
             output_string = output_string + "H"
-        elif stat == 'elt':
+        elif stat == 'elt' or stat == 4:
             pointer += 8
             output_string = output_string + "H"
-        elif stat == 'edk':
+        elif stat == 'edk' or stat == 5:
             pointer += 10
             output_string = output_string + "H"
+        elif stat == 'unknown_a6' or stat == 6:
+            pointer += 0x0C
+            output_string = output_string + 'I'
+        elif stat == 'unknown_a7' or stat == 7:
+            pointer += 0x10
+            output_string = output_string + 'I'
+        elif stat == 'unknown_a8' or stat == 8:
+            pointer += 0x14
+            output_string = output_string + 'I'
+        elif stat == 'unknown_a9' or stat == 9:
+            pointer += 0x18
+            output_string = output_string + 'I'
+        elif stat == 'dfp_bonus' or stat == 10:
+            pointer += 0x1C
+            output_string = output_string + 'i'
 
         else:
             raise KeyError("please use lower case attribute name")
         print(f'Pointer is at {hex(pointer)} ({pointer})')
         width = struct.calcsize(output_string)
         old_value = struct.unpack(output_string, self.data[pointer:pointer + width])[0]
-        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width])})")
+        print(f"Previous value was {old_value} ({bytes(self.data[pointer:pointer + width]).hex()})")
         new_value = struct.pack(output_string, value)
         self.data[pointer:pointer + width] = new_value
-        print(f"Value is now {value} ({new_value}) at {hex(pointer)}")
+        print(f"Value is now {value} ({new_value.hex()}) at {hex(pointer)}")
 
     def get_stat_table(self,difficulty:int,verbose:bool=False):
-        table_length = 0x60
+
+        difficulty = _validate_difficulty(difficulty)
+
+
         stat_size = struct.calcsize(player_stats_format)
-        pointer = 0x0 + difficulty * (table_length * stat_size)
+        pointer = 0x0 + difficulty * (self.table_length * stat_size)
 
         stat_table = pd.DataFrame(columns=['HP', 'XP', 'ATP', 'DFP', 'MST', 'ATA', 'EVP', 'LCK', 'ESP'])
-        i = 0x0
+
 
         # while pointer < 0x3600:
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + stat_size]
             if i in self.stat_num_to_str_map.keys():
                 if verbose: print(self.stat_num_to_str_map[i], i)
@@ -813,15 +936,18 @@ class Table:
         return stat_table
 
     def get_stat_table_raw(self,difficulty:int):
-        table_length = 0x60
+
+        difficulty = _validate_difficulty(difficulty)
+
+
         stat_size = struct.calcsize(player_stats_format)
-        pointer = 0x0 + difficulty * (table_length * stat_size)
+        pointer = 0x0 + difficulty * (self.table_length * stat_size)
 
         stat_table = pd.DataFrame(columns=[i for i in range(13)])
         i = 0x0
 
         # while pointer < 0x3600:
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + stat_size]
             # print(subset)
             stat_table.loc[i] = struct.unpack(player_stats_format,subset)
@@ -831,6 +957,9 @@ class Table:
         return stat_table
 
     def get_table_raw(self, table, difficulty):
+
+        difficulty = _validate_difficulty(difficulty)
+
         if table == 'stat':
             return self.get_stat_table_raw(difficulty)
         elif table == 'resist':
@@ -843,15 +972,17 @@ class Table:
             raise Exception("Invalid table name")
 
     def get_resist_table(self,difficulty:int,verbose:bool=False):
-        table_length = 0x60
+
+        difficulty = _validate_difficulty(difficulty)
+
 
         resist_table = pd.DataFrame(columns=['EFR', 'EIC', 'ETH', 'ELT', 'EDK', ])
 
         resist_size = struct.calcsize(resist_format_str)
-        pointer = 0x7E00 + difficulty * (table_length * resist_size)
+        pointer = 0x7E00 + difficulty * (self.table_length * resist_size)
         i = 0x0
 
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + resist_size]
             if i in self.resist_num_to_str_map.keys():
                 if verbose: print(self.resist_num_to_str_map[i], i)
@@ -865,15 +996,16 @@ class Table:
         return resist_table
 
     def get_resist_table_raw(self,difficulty:int):
-        table_length = 0x60
+
+        difficulty = _validate_difficulty(difficulty)
 
         resist_table = pd.DataFrame(columns=[i for i in range(11)])
 
         resist_size = struct.calcsize(resist_format_str)
-        pointer = 0x7E00 + difficulty * (table_length * resist_size)
+        pointer = 0x7E00 + difficulty * (self.table_length * resist_size)
         i = 0x0
 
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + resist_size]
             # print(subset)
             resist_table.loc[i] = struct.unpack(resist_format_str, subset)
@@ -883,15 +1015,15 @@ class Table:
         return resist_table
 
     def get_attack_table_raw(self,difficulty:int):
-        table_length = 0x60
+        difficulty = _validate_difficulty(difficulty)
 
         attack_table = pd.DataFrame(columns=[i for i in range(16)])
 
         attack_size = struct.calcsize(attack_format_str)
-        pointer = 0x3600 + difficulty * (table_length * attack_size)
+        pointer = 0x3600 + difficulty * (self.table_length * attack_size)
         i = 0x0
 
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + attack_size]
             # print(subset)
             attack_table.loc[i] = struct.unpack(attack_format_str, subset)
@@ -901,15 +1033,15 @@ class Table:
         return attack_table
 
     def get_movement_table_raw(self,difficulty:int):
-        table_length = 0x60
+        difficulty = _validate_difficulty(difficulty)
 
         movement_table = pd.DataFrame(columns=[i for i in range(12)])
 
         movement_size = struct.calcsize(movement_format_str)
-        pointer = 0xAE00 + difficulty * (table_length * movement_size)
+        pointer = 0xAE00 + difficulty * (self.table_length * movement_size)
         i = 0x0
 
-        for i in range(table_length):
+        for i in range(self.table_length):
             subset = self.data[pointer:pointer + movement_size]
             # print(subset)
             movement_table.loc[i] = struct.unpack(movement_format_str, subset)
@@ -919,6 +1051,7 @@ class Table:
         return movement_table
 
     def get_merged_table(self, difficulty:int,verbose:bool=False):
+        difficulty = _validate_difficulty(difficulty)
 
         stat_table = self.get_stat_table(difficulty=difficulty, verbose=verbose)
         resist_table = self.get_resist_table(difficulty=difficulty, verbose=verbose)
@@ -929,13 +1062,16 @@ class Table:
         return merged_table
 
     def set_with_data_type(self,value, data_type, location ,little_endian=True, verbose=True):
+
+        self._check_pointer_inside_file_length(location)
+
         pointer = location
         format_string = ''
         if little_endian:
             format_string = format_string + '<'
         else:
             format_string = format_string + '>'
-        if data_type == 'float':
+        if data_type == 'float' or data_type == float:
             format_string = format_string + 'f'
         elif data_type == 'double':
             format_string = format_string + 'd'
@@ -955,22 +1091,31 @@ class Table:
         new_value = struct.pack(format_string, value)
         if verbose:
             print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
-            print(f'Was {self.data[pointer:pointer+width]}')
+            print(f'Was {self.data[pointer:pointer+width].hex()}')
+
         self.data[pointer:pointer + width] = new_value
         if verbose:
-            print(f"Now {self.data[pointer:pointer+width]}")
+            print(f"Now {self.data[pointer:pointer+width].hex()}")
+
+    def _check_pointer_inside_file_length(self, location):
+        if location >= len(self.data):
+            raise Exception("Pointer location outside file range")
 
     def set_with_bytes(self, value : bytes, location, verbose=True):
+        self._check_pointer_inside_file_length(location)
+
         pointer = location
         width = len(value)
         if verbose:
             print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
-            print(f'Was {self.data[pointer:pointer+width]}')
+            print(f'Was {self.data[pointer:pointer+width].hex()}')
         self.data[pointer:pointer + width] = value
         if verbose:
-            print(f"Now {self.data[pointer:pointer+width]}")
+            print(f"Now {self.data[pointer:pointer+width].hex()}")
 
     def get_bytes(self,start,end):
+        self._check_pointer_inside_file_length(start)
+        self._check_pointer_inside_file_length(end)
         return self.data[start:end+1]
 
     def search_bytes(self, sequence):
