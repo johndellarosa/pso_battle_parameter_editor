@@ -5,7 +5,7 @@ Hex number is the enemy entry number in each section->difficulty table
 
 ### Jump
 
-0.2 x attack[0]
+0.2 x 0x4a attack[0]
 
 ## Gillchic
 

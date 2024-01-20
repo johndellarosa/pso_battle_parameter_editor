@@ -4,6 +4,8 @@ import numpy as np
 import os
 import os.path
 import pandas as pd
+import collections.abc
+import warnings
 
 # Created by John Della Rosa 2024
 # Uses information gotten from Newserv
@@ -403,7 +405,7 @@ def _validate_difficulty(difficulty):
     return difficulty
 
 
-class Table:
+class Table(collections.abc.Sequence):
 
     episode = 0
     data = []
@@ -1068,21 +1070,21 @@ class Table:
 
         pointer = location
         format_string = ''
-        if little_endian:
+        if little_endian or data_type[:2] == 'le':
             format_string = format_string + '<'
         else:
             format_string = format_string + '>'
-        if data_type == 'float' or data_type == float:
+        if data_type == 'float' or data_type == 'le_float' or data_type == float:
             format_string = format_string + 'f'
-        elif data_type == 'double':
+        elif data_type == 'double' or data_type == 'le_double':
             format_string = format_string + 'd'
-        elif data_type == 'int32':
+        elif data_type == 'int32' or data_type == 'le_int32':
             format_string = format_string + 'i'
-        elif data_type == 'uint32':
+        elif data_type == 'uint32' or data_type == 'le_uint32':
             format_string = format_string +'I'
-        elif data_type == 'int16':
+        elif data_type == 'int16' or data_type == 'le_int16':
             format_string = format_string + 'h'
-        elif data_type == 'uint16':
+        elif data_type == 'uint16' or data_type == 'le_uint16':
             format_string = format_string + 'H'
         else:
             raise Exception('Error with data_type parameter')
@@ -1168,12 +1170,33 @@ class Table:
 
         return output_df
 
-    def __repr__(self):
+    def __str__(self):
         return f'Episode {self.episode} table object'
+
+    def __bool__(self):
+        return True
+
+    def __index__(self):
+        return self.episode
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __setitem__(self, key, value):
+        # self._check_pointer_inside_file_length(key)
+        # warnings.warn('Please use set_with_bytes method instead of direct setting. Direct setting may cause errors in data.',DeprecationWarning)
+        self.data[key] = value
+
+
+
+
 
 class Subtable:
 
-    def __int__(self, format_string,base_pointer):
+    def __init__(self, format_string,base_pointer):
 
         self.format_string = format_string
         self.base_pointer = base_pointer
