@@ -1,6 +1,11 @@
 Indexing is 0-based
 Hex number is the enemy entry number in each section->difficulty table
 
+## Hildebear
+
+### Jump
+
+0.2 x attack[0]
 
 ## Gillchic
 

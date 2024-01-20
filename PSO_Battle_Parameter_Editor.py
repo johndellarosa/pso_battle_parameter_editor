@@ -792,7 +792,8 @@ class Table:
 
         pointer = 0x0 + difficulty * (table_length * stat_size) + enemy_position * stat_size
         output_string = '<'
-        stat = stat.lower()
+        if type(stat) == str:
+            stat = stat.lower()
         if stat == 'atp'  or stat == 0:
             pointer += 0
             output_string = output_string + "H"
@@ -861,8 +862,8 @@ class Table:
         resist_size = struct.calcsize(resist_format_str)
         output_string = '<'
         pointer = 0x7E00 + difficulty * (table_length * resist_size) + enemy_position * resist_size
-
-        stat = stat.lower()
+        if type(stat) == str:
+            stat = stat.lower()
         if stat == 'evp_bonus' or stat == 0:
             pointer += 0
             output_string = output_string + "h"
@@ -941,7 +942,7 @@ class Table:
 
 
         stat_size = struct.calcsize(player_stats_format)
-        pointer = 0x0 + difficulty * (self.table_length * stat_size)
+        pointer = self.base_pointer_stat + difficulty * (self.table_length * stat_size)
 
         stat_table = pd.DataFrame(columns=[i for i in range(13)])
         i = 0x0
@@ -979,7 +980,7 @@ class Table:
         resist_table = pd.DataFrame(columns=['EFR', 'EIC', 'ETH', 'ELT', 'EDK', ])
 
         resist_size = struct.calcsize(resist_format_str)
-        pointer = 0x7E00 + difficulty * (self.table_length * resist_size)
+        pointer = self.base_pointer_resist + difficulty * (self.table_length * resist_size)
         i = 0x0
 
         for i in range(self.table_length):
@@ -1002,7 +1003,7 @@ class Table:
         resist_table = pd.DataFrame(columns=[i for i in range(11)])
 
         resist_size = struct.calcsize(resist_format_str)
-        pointer = 0x7E00 + difficulty * (self.table_length * resist_size)
+        pointer = self.base_pointer_resist + difficulty * (self.table_length * resist_size)
         i = 0x0
 
         for i in range(self.table_length):
@@ -1020,7 +1021,7 @@ class Table:
         attack_table = pd.DataFrame(columns=[i for i in range(16)])
 
         attack_size = struct.calcsize(attack_format_str)
-        pointer = 0x3600 + difficulty * (self.table_length * attack_size)
+        pointer = self.base_pointer_attack + difficulty * (self.table_length * attack_size)
         i = 0x0
 
         for i in range(self.table_length):
@@ -1038,7 +1039,7 @@ class Table:
         movement_table = pd.DataFrame(columns=[i for i in range(12)])
 
         movement_size = struct.calcsize(movement_format_str)
-        pointer = 0xAE00 + difficulty * (self.table_length * movement_size)
+        pointer = self.base_pointer_movement + difficulty * (self.table_length * movement_size)
         i = 0x0
 
         for i in range(self.table_length):
@@ -1090,7 +1091,7 @@ class Table:
         width = struct.calcsize(format_string)
         new_value = struct.pack(format_string, value)
         if verbose:
-            print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
+            print(f'Setting bytes in region from {hex(location)} to {hex(location+width-1)}')
             print(f'Was {self.data[pointer:pointer+width].hex()}')
 
         self.data[pointer:pointer + width] = new_value
@@ -1107,7 +1108,7 @@ class Table:
         pointer = location
         width = len(value)
         if verbose:
-            print(f'Settings bytes in region from {hex(location)} to {hex(location+width-1)}')
+            print(f'Setting bytes in region from {hex(location)} to {hex(location+width-1)}')
             print(f'Was {self.data[pointer:pointer+width].hex()}')
         self.data[pointer:pointer + width] = value
         if verbose:
@@ -1141,15 +1142,15 @@ class Table:
 
 
     def get_all_instances_in_table(self, row, table, row_prefix = '', column_prefix = ''):
-        base_pointer = 0
-        if table == 'stat':
-            base_pointer = 0
-        elif table == 'resist':
-            base_pointer = 0x7E00
-        elif table == 'attack':
-            base_pointer = 0x3600
-        elif table == 'movement':
-            base_pointer = 0xAE00
+        # base_pointer = 0
+        # if table == 'stat':
+        #     base_pointer = 0
+        # elif table == 'resist':
+        #     base_pointer = 0x7E00
+        # elif table == 'attack':
+        #     base_pointer = 0x3600
+        # elif table == 'movement':
+        #     base_pointer = 0xAE00
         temp_df = self.get_table_raw(table,0).iloc[row]
         # print(temp_df)
         output_df = pd.DataFrame(columns=temp_df.index)
