@@ -169,3 +169,7 @@ Damage = (Tech power + 0.5 0x37 MST)/5
 
 ### Megid level 
 movement 0x38,unknown_a4 (0-based)
+
+### Grants
+Tech level from 0x38 movement6
+Damage = (Tech power + 0.5 0x38 MST)/5
