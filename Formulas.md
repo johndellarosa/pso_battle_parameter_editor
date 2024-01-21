@@ -1,11 +1,16 @@
 Indexing is 0-based
 Hex number is the enemy entry number in each section->difficulty table
 
+# Forest
+
 ## Hildebear
 
 ### Jump
 
-0.2 x 0x4a attack[0]
+0.2 x 0x4a attack0
+
+### Foie
+unknown
 
 ## Dragon
 
@@ -18,25 +23,7 @@ Hex number is the enemy entry number in each section->difficulty table
 ### Tunnel
 0.2 x 0x11 movement2
 
-## Gillchic
-
-### Laser 
-0.2 x movement[9]
-
-## Dubchic
-
-### Laser 
-0.2 x movement[9]
-
-## Canadine
-
-### Zonde
-0.2 x 0x07 movement1
-
-## Canane
-
-### Zonde
-0.2 x 0x09 movement1
+# Caves
 
 ## Poison lily
 ### Megid level
@@ -46,12 +33,12 @@ Hex number is the enemy entry number in each section->difficulty table
 ### Megid level
 0x5 movement6
 
-## nano dragon
+## Nano dragon
 
-### 2 bullets 
+### 2 Bullets 
 0.2 x 0x1a movement7
 
-### single 
+### Single 
 0.2 x 0x1a movement6
 
 ## Pofuilly Slime
@@ -80,11 +67,35 @@ Hex number is the enemy entry number in each section->difficulty table
 ### mines 
 0xf movement2 + 1
 
+# Mines
+
+## Gillchic
+
+### Laser 
+0.2 x movement[9]
+
+## Dubchic
+
+### Laser 
+0.2 x movement[9]
+
+## Canadine
+
+### Zonde
+0.2 x 0x07 movement1
+
+## Canane
+
+### Zonde
+0.2 x 0x09 movement1
+
 
 ## GARANZ
 
 ### Missiles 
 0.2 x 0x1d movement8
+
+# Ruins
 
 ## Chaos Bringer
 
@@ -94,6 +105,23 @@ Hex number is the enemy entry number in each section->difficulty table
 ### Cannon
 min: 0.2 x 0xd movement9
 max: double
+
+## Chaos Sorcerer
+
+### Rafoie
+Tech level = 0xA one of movement6,7,8. (Values are same N-VH)
+Damage = (Tech power + 0.5 * 0xA MST)/5
+
+### Gibarta
+Tech level = 0xA one of movement6,7,8. (Values are same N-VH)
+Damage = (Tech power + 0.5 * 0xA MST)/5
+
+### Grants
+Tech level = 0xA one of movement6,7. (Values are same)
+Damage = (Tech power + 0.5 * 0xA MST)/5
+
+### Megid
+Level comes from either 0xA movement6 or 0xA movement7
 
 ## Dark Gunner
 
@@ -105,6 +133,14 @@ max: double
 ### Divine punishment 
 0x36 mov[8]/5+mst/10
 
+### Rafoie
+Level comes from 0x36 movement6
+Damage = (Tech power + 0.5 0x36 MST)/5
+
+### Rabarta
+Level comes from 0x36 movement7
+Damage = (Tech power + 0.5 0x36 MST)/5
+
 ## Dark Falz 2
 
 ### Divine punishment =
@@ -113,6 +149,14 @@ USES DARK FALZ 1 ROW PARAMETER BUT ITS OWN MST
 
 ### Life drain 
 50 + 0.2 0x37mst + 0x37 movement7
+
+### Rafoie
+Level comes from 0x36 movement6
+Damage = (Tech power + 0.5 0x37 MST)/5
+
+### Rabarta
+Level comes from 0x36 movement7
+Damage = (Tech power + 0.5 0x37 MST)/5
 
 ## Dark Falz 3
 
