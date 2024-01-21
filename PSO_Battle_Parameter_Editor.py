@@ -789,10 +789,10 @@ class Table(collections.abc.Sequence):
             enemy_position = enemy
         self._check_enemy_entry_number_in_range(enemy_position)
         # stats
-        table_length = 0x60
+
         stat_size = struct.calcsize(player_stats_format)
 
-        pointer = 0x0 + difficulty * (table_length * stat_size) + enemy_position * stat_size
+        pointer = self.base_pointer_stat + difficulty * (self.table_length * stat_size) + enemy_position * stat_size
         output_string = '<'
         if type(stat) == str:
             stat = stat.lower()
@@ -832,7 +832,7 @@ class Table(collections.abc.Sequence):
         elif stat == 'level' or stat == 11:
             pointer += 0x18
             output_string = output_string + "I"
-        elif stat == 'experience' or stat == 12:
+        elif stat == 'experience' or stat == 'xp' or stat == 'exp' or stat == 12:
             pointer += 0x1C
             output_string = output_string + "I"
         elif stat == 'meseta' or stat == 13:
@@ -860,10 +860,10 @@ class Table(collections.abc.Sequence):
             raise KeyError("Check enemy spelling. List of keys in get_keys(episode num).")
         self._check_enemy_entry_number_in_range(enemy_position)
         # stats
-        table_length = 0x60
+
         resist_size = struct.calcsize(resist_format_str)
         output_string = '<'
-        pointer = 0x7E00 + difficulty * (table_length * resist_size) + enemy_position * resist_size
+        pointer = self.base_pointer_resist + difficulty * (self.table_length * resist_size) + enemy_position * resist_size
         if type(stat) == str:
             stat = stat.lower()
         if stat == 'evp_bonus' or stat == 0:
@@ -922,7 +922,6 @@ class Table(collections.abc.Sequence):
         stat_table = pd.DataFrame(columns=['HP', 'XP', 'ATP', 'DFP', 'MST', 'ATA', 'EVP', 'LCK', 'ESP'])
 
 
-        # while pointer < 0x3600:
         for i in range(self.table_length):
             subset = self.data[pointer:pointer + stat_size]
             if i in self.stat_num_to_str_map.keys():

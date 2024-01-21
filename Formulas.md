@@ -7,6 +7,17 @@ Hex number is the enemy entry number in each section->difficulty table
 
 0.2 x 0x4a attack[0]
 
+## Dragon
+
+### Fire Breath
+0.2 x 0x11 movement0
+
+### Multishot
+0.2 x 0x11 movement1
+
+### Tunnel
+0.2 x 0x11 movement2
+
 ## Gillchic
 
 ### Laser 
@@ -16,6 +27,24 @@ Hex number is the enemy entry number in each section->difficulty table
 
 ### Laser 
 0.2 x movement[9]
+
+## Canadine
+
+### Zonde
+0.2 x 0x07 movement1
+
+## Canane
+
+### Zonde
+0.2 x 0x09 movement1
+
+## Poison lily
+### Megid level
+0x4 movement6
+
+## Nar lily
+### Megid level
+0x5 movement6
 
 ## nano dragon
 
@@ -60,7 +89,11 @@ Hex number is the enemy entry number in each section->difficulty table
 ## Chaos Bringer
 
 ### Charge 
-'0xd unknown_m5' x 0.2
+0xd movement8 x 0.2
+
+### Cannon
+min: 0.2 x 0xd movement9
+max: double
 
 ## Dark Gunner
 
