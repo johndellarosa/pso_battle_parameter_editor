@@ -43,3 +43,11 @@ To avoid potentially ruining game files, there are some safeguards. The relevant
 2. overwrite (optional with default False): if there already exists a file with the chosen name, the method will warn you that a file with that name already exists and not write out the data. If you wish to allow overwriting the file, you can set overwrite=True.
 Sample use:
 ```file.write('test_param.dat')```
+
+## Acknowledgements
+
+Code by John Della Rosa
+
+File information based on [Newserv/fu](https://github.com/fuzziqersoftware/newserv)https://github.com/fuzziqersoftware/newserv
+
+Inspired by Solybum
